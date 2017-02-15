@@ -195,7 +195,7 @@ ttyplay (FILE *fp, ReadFunc read_func, WriteFunc write_func, Options o)
     setbuf(fp, NULL);
 
     StringBuilder *sb = StringBuilder_new();
-    StringBuilder_write(sb, "convert -loop 0 ");
+    StringBuilder_write(sb, "ffmpeg -framerate 25 ");
 
     int nskipped = 0;
     bool skip = false;
@@ -233,8 +233,8 @@ ttyplay (FILE *fp, ReadFunc read_func, WriteFunc write_func, Options o)
         }
 
         if (!skip && index != 0) {
-            if (sprintf(arg_buffer, " -delay %f %s", delay * 0.1, img_path) < 0) {
-                fatalf("Error: Failed to format 'convert' parameters");
+            if (sprintf(arg_buffer, " -i %s -t %f", img_path, delay * 0.1) < 0) {
+                fatalf("Error: Failed to format 'ffmpeg' parameters");
             }
             StringBuilder_write(sb, arg_buffer);
         }
@@ -250,11 +250,10 @@ ttyplay (FILE *fp, ReadFunc read_func, WriteFunc write_func, Options o)
         free(buf);
     }
 
-    StringBuilder_write(sb, " -layers Optimize ");
     StringBuilder_write(sb, o.out_file);
     StringBuilder_write(sb, " 2>&1");
 
-    printf("Creating Animated GIF ... this can take a while\n");
+    printf("Creating mp4 ... this can take a while\n");
     system_exec(sb->s, o);
     printf("Created: %s in the current directory!\n", o.out_file);
 
@@ -292,7 +291,7 @@ main (int argc, char **argv)
     options.skip_limit = 5;
     options.skip_threshold = 0;
     options.debug = getenv("TTYGIF_DEBUG") != NULL;
-    options.out_file = "tty.gif";
+    options.out_file = "tty.mp4";
 
     char dir_template[] = "/tmp/ttygif.XXXXXX";
     options.img_dir = mkdtemp(dir_template);
